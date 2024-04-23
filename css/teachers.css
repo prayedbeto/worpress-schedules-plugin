@@ -1,0 +1,9 @@
+.campo-profesor {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.select-profesor {
+    width: 100%;
+}

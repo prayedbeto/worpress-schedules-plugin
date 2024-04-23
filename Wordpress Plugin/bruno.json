@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Wordpress Plugin",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
