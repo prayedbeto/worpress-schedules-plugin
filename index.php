@@ -266,7 +266,7 @@ function validate_session_before_cart_add_action($cart, $product_id, $quantity =
     if (!is_user_logged_in()) {
         // User is not logged in, redirect to login page
         
-        wp_redirect('\/register?redirect='. $currentPath);
+        wp_redirect('\/login?redirect='. $currentPath);
         // wc_add_notice(__('Please log in to add products to your cart.', 'woocommerce'), 'error');
         exit;
     }
