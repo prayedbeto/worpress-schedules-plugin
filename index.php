@@ -2,11 +2,11 @@
 
 /**
  * Plugin Name: Filter Options Woocommerce
- * Plugin URI: https://www.your-plugins-site.com/
+ * Plugin URI: https://github.com/prayedbeto/worpress-schedules-plugin
  * Description: Manage options on select fields.
  * Version: 0.1
  * Author: Luis Vasquez
- * Author URI: https://www.your-site.com/
+ * Author URI: https://bit.ly/3dncYre
  **/
 
 add_action('woocommerce_before_add_to_cart_button', 'mostrar_campos_personalizados');

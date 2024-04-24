@@ -1,0 +1,55 @@
+INSERT INTO `wordpress`.`wp_lavs_teachers` (`name`) VALUES ('Profesor X');
+INSERT INTO `wordpress`.`wp_lavs_teachers` (`name`) VALUES ('Profesor Y');
+INSERT INTO `wordpress`.`wp_lavs_teachers` (`name`) VALUES ('Profesor Z');
+
+INSERT INTO `wordpress`.`wp_lavs_schedules` (`schedule`) VALUES ('08:00 - 09:00');
+INSERT INTO `wordpress`.`wp_lavs_schedules` (`schedule`) VALUES ('09:00 - 10:00');
+INSERT INTO `wordpress`.`wp_lavs_schedules` (`schedule`) VALUES ('10:00 - 11:00');
+
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 1, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 1, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 1, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 1, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 1, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 1, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 1, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 1, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 1, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 1, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 1, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 1, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 1, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 1, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 1, 'V');
+
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 2, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 2, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 2, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 2, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 2, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 2, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 2, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 2, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 2, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 2, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 2, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 2, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 2, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 2, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 2, 'V');
+
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 3, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 3, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 3, 'L');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 3, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 3, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 3, 'M');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 3, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 3, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 3, 'X');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 3, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 3, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 3, 'J');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 1, 3, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 2, 3, 'V');
+INSERT INTO `wordpress`.`wp_lavs_schedule_teacher` (`id`, `schedule_id`, `teacher_id`, `day`) VALUES (NULL, 3, 3, 'V');
