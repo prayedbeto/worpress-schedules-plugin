@@ -223,6 +223,9 @@ function jal_install() {
 
 	$sql = "CREATE TABLE $table_name (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
+		cart_id varchar(255) NOT NULL,
+		product_id mediumint(9) NOT NULL,
+		user_id mediumint(9) DEFAULT 0,
         teacher_id mediumint(9) NOT NULL,
         schedule_id mediumint(9) NOT NULL,
         day char(1) NOT NULL,
@@ -253,10 +256,26 @@ function jal_install_data() {
 	);
 }
 
-add_action('woocommerce_add_to_cart', 'my_after_add_to_cart_function', 10, 4);
+add_action('woocommerce_add_to_cart', 'validate_session_before_cart_add_action', 10, 3);
 
-function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $cart_id) {
-    echo "<div>" . json_encode($_POST) . "</div>";
+function validate_session_before_cart_add_action($cart, $product_id, $quantity = 1) {
+    global $wpdb;
+
+    $currentPath = $_SERVER['REQUEST_URI'];
+
+    if (!is_user_logged_in()) {
+        // User is not logged in, redirect to login page
+        
+        wp_redirect('\/register?redirect='. $currentPath);
+        // wc_add_notice(__('Please log in to add products to your cart.', 'woocommerce'), 'error');
+        exit;
+    }
+}
+
+add_action('woocommerce_add_to_cart', 'my_after_add_to_cart_function', 11, 6);
+
+function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variation_id, $variation, $cart_item_data) {
+    $user_id = get_current_user_id();
     $teacher_id = $_POST['profesor_id'];
     $schedule_id = $_POST['horario_id'];
     $m_schedule_id = $_POST['m_horario_id'];
@@ -270,6 +289,9 @@ function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $c
     $result = $wpdb->insert( 
 		$wpdb->prefix . "lavs_schedule_item", 
 		[
+            'cart_id' => $cart_id,
+            'product_id' => $product_id,
+            'user_id' => $user_id,
 			'teacher_id' => $teacher_id, 
 			'schedule_id' => $schedule_id, 
             'day' => 'L',
@@ -279,6 +301,9 @@ function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $c
     $result = $wpdb->insert( 
 		$wpdb->prefix . "lavs_schedule_item", 
 		[
+            'cart_id' => $cart_id,
+            'product_id' => $product_id,
+            'user_id' => $user_id,
 			'teacher_id' => $teacher_id, 
 			'schedule_id' => $m_schedule_id, 
             'day' => 'M',
@@ -288,6 +313,9 @@ function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $c
     $result = $wpdb->insert( 
 		$wpdb->prefix . "lavs_schedule_item", 
 		[
+            'cart_id' => $cart_id,
+            'product_id' => $product_id,
+            'user_id' => $user_id,
 			'teacher_id' => $teacher_id, 
 			'schedule_id' => $x_schedule_id, 
             'day' => 'X',
@@ -297,6 +325,9 @@ function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $c
     $result = $wpdb->insert( 
 		$wpdb->prefix . "lavs_schedule_item", 
 		[
+            'cart_id' => $cart_id,
+            'product_id' => $product_id,
+            'user_id' => $user_id,
 			'teacher_id' => $teacher_id, 
 			'schedule_id' => $j_schedule_id, 
             'day' => 'J',
@@ -306,55 +337,54 @@ function my_after_add_to_cart_function($product_id, $quantity, $variation_id, $c
     $result = $wpdb->insert( 
 		$wpdb->prefix . "lavs_schedule_item", 
 		[
+            'cart_id' => $cart_id,
+            'product_id' => $product_id,
+            'user_id' => $user_id,
 			'teacher_id' => $teacher_id, 
 			'schedule_id' => $v_schedule_id, 
             'day' => 'V',
 			'add_to_cart' => $add_to_cart, 
         ] 
 	);
-
-    echo "<div>" . json_encode($result) . "</div>";
 }
 
-add_action('woocommerce_order_status_changed', 'my_after_checkout_function', 11, 3);
+// add_action('woocommerce_checkout_create_order_line_item', 'lavs_woocommerce_checkout_create_order_line_item', 11, 4);
 
-function my_after_checkout_function($order_id, $previous_status, $new_status) {
-    // Your custom function logic goes here
-    // For example:
-    // - Send a notification to the customer or admin
-    // - Update an external system with order details
-    // - Perform post-order processing tasks like generating invoices or shipping labels
+// function lavs_woocommerce_checkout_create_order_line_item($item, $cart_item_key, $values, $order ) {
+//     global $wpdb;
+
+// }
+
+
+add_action('woocommerce_order_status_changed', 'my_after_checkout_function', 11, 4);
+
+function my_after_checkout_function($order_id, $previous_status, $new_status, $order) {
     global $wpdb;
-    
-    $wpdb->insert( 
-		$wpdb->prefix . "lavs_logs", ['log' => json_encode($order_id),] 
-	);
-    $wpdb->insert( 
-        $wpdb->prefix . "lavs_logs", ['log' => json_encode($previous_status),] 
-    );
-    $wpdb->insert( 
-		$wpdb->prefix . "lavs_logs", ['log' => json_encode($new_status),] 
-	);
 
     if ($new_status === 'on-hold' || $new_status === 'processing') {
         // Order checkout is completed, perform specific actions
 
+        $user_id = get_current_user_id();
+        // $sql = "SELECT
+        //         lsi.teacher_id, lsi.schedule_id, lsi.day
+        //     FROM
+        //         {$wpdb->prefix}woocommerce_order_items woi
+        //         INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta woim ON woi.order_item_id = woim.order_item_id
+        //         INNER JOIN {$wpdb->prefix}lavs_schedule_item lsi on woim.meta_value = lsi.add_to_cart
+        //     WHERE
+        //         order_id = %d
+        //         AND woim.meta_key LIKE '_product_id'";
         $sql = "SELECT
-                lsi.teacher_id, lsi.schedule_id, lsi.day
-            FROM
-                {$wpdb->prefix}woocommerce_order_items woi
-                INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta woim ON woi.order_item_id = woim.order_item_id
-                INNER JOIN {$wpdb->prefix}lavs_schedule_item lsi on woim.meta_value = lsi.add_to_cart
-            WHERE
-                order_id = %d
-                AND woim.meta_key LIKE '_product_id'";
+                    * 
+                FROM
+                    wp_lavs_schedule_item 
+                WHERE
+                    user_id = %d";
 
-        $prepared_sql = $wpdb->prepare($sql, $order_id);
+        $prepared_sql = $wpdb->prepare($sql, $user_id);
 
         $results = $wpdb->get_results($prepared_sql);
-        $wpdb->insert( 
-            $wpdb->prefix . "lavs_logs", ['log' => json_encode($results),] 
-        );
+        
         foreach($results as $result) {
             $sql = "UPDATE " . $wpdb->prefix . "lavs_schedule_teacher 
                 SET busy = 1 
@@ -366,15 +396,13 @@ function my_after_checkout_function($order_id, $previous_status, $new_status) {
             $prepared_sql = $wpdb->prepare($sql, $result->teacher_id, $result->schedule_id, $result->day);
     
             $result = $wpdb->query($prepared_sql);
-
-            $wpdb->insert( 
-                $wpdb->prefix . "lavs_logs", ['log' => json_encode($wpdb->print_error()),] 
-            );
         }
 
-        // echo "<div>" . json_encode($results) . "</div>";
+        $sql = "DELETE FROM " . $wpdb->prefix . "lavs_schedule_item
+            WHERE user_id = %d";
+        
+        $prepared_sql = $wpdb->prepare($sql, $user_id);
+
+        $result = $wpdb->query($prepared_sql);
     }
-    $wpdb->insert( 
-		$wpdb->prefix . "lavs_logs", ['log' => json_encode($results),] 
-	);
 }
