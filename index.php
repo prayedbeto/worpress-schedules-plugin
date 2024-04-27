@@ -355,6 +355,47 @@ function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variat
 
 // }
 
+add_action('woocommerce_checkout_create_order_line_item', 'my_after_create_order_line_item', 20, 4);
+
+function my_after_create_order_line_item($item, $cart_item_key, $values, $order)
+{
+    global $wpdb;
+
+    $user_id = get_current_user_id();
+
+    $days = ['L' => 'Lunes', 'M' => 'Martes', 'X' => 'Miercoles', 'J' => 'Jueves', 'V' => 'Viernes'];
+
+    $sql = "SELECT
+            lst.id,
+            lst.schedule_id,
+            ls.`schedule`,
+            lst.teacher_id,
+            lt.`name`,
+            lst.`day` 
+        FROM
+            " . $wpdb->prefix . "lavs_schedule_item lst
+            INNER JOIN " . $wpdb->prefix . "lavs_schedules ls ON lst.schedule_id = ls.id
+            INNER JOIN " . $wpdb->prefix . "lavs_teachers lt ON lst.teacher_id = lt.id
+        WHERE lst.user_id = %d
+        ORDER BY ls.`schedule`";
+
+    $prepared_sql = $wpdb->prepare($sql, $user_id);
+
+    $results = $wpdb->get_results($prepared_sql);
+
+    $wpdb->insert( 
+		$wpdb->prefix . "lavs_logs", 
+		[
+            'key' => 'results',
+            'log' => json_encode($results),
+        ] 
+	);
+    $item->add_meta_data('Profesor', $results[0]->name);
+
+    foreach($results as $result) {
+        $item->add_meta_data($days[$result->day], $result->schedule .' hrs.' );
+    }
+}
 
 add_action('woocommerce_order_status_changed', 'my_after_checkout_function', 11, 4);
 
@@ -377,7 +418,7 @@ function my_after_checkout_function($order_id, $previous_status, $new_status, $o
         $sql = "SELECT
                     * 
                 FROM
-                    wp_lavs_schedule_item 
+                    ". $wpdb->prefix . "lavs_schedule_item 
                 WHERE
                     user_id = %d";
 
@@ -406,3 +447,316 @@ function my_after_checkout_function($order_id, $previous_status, $new_status, $o
         $result = $wpdb->query($prepared_sql);
     }
 }
+
+function wporg_options_page_html() {
+	// check user capabilities
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+    global $wpdb;
+
+    if($_POST && $_POST['scheduleteacher_id'] >= 1) {
+        $sql = "DELETE FROM " . $wpdb->prefix . "lavs_schedule_teacher WHERE id = %d;";
+
+        $prepared_sql = $wpdb->prepare($sql, $_POST['scheduleteacher_id']);
+
+        $wpdb->query($prepared_sql);
+    }
+
+    if($_POST && $_POST['submit'] == 'Guardar Horario') {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_teacher", 
+            array( 
+                'schedule_id' => $_POST['schedule_id'], 
+                'teacher_id' => $_POST['teacher_id'], 
+                'day' => $_POST['day'], 
+            ) 
+        );
+    }
+
+    $sql = "SELECT * FROM " . $wpdb->prefix . "lavs_schedules;";
+    $prepared_sql = $wpdb->prepare($sql);
+    $schedules = $wpdb->get_results($prepared_sql);
+
+    $sql = "SELECT * FROM " . $wpdb->prefix . "lavs_teachers;";
+    $prepared_sql = $wpdb->prepare($sql);
+    $teachers = $wpdb->get_results($prepared_sql);
+
+    $sql = "SELECT
+        lst.id, ls.`schedule`, lt.`name`, lst.`day`
+        FROM
+        " . $wpdb->prefix . "lavs_schedule_teacher lst
+        INNER JOIN " . $wpdb->prefix . "lavs_schedules ls ON lst.schedule_id = ls.id
+        INNER JOIN " . $wpdb->prefix . "lavs_teachers lt ON lst.teacher_id = lt.id
+        ORDER BY ls.`schedule`";
+    $prepared_sql = $wpdb->prepare($sql);
+    $schedulesteachers = $wpdb->get_results($prepared_sql);
+
+    foreach($schedulesteachers as $schedule) {
+        if($schedule->day == 'L')
+            $schedule->day = 'Lunes';
+        if($schedule->day == 'M')
+            $schedule->day = 'Martes';
+        if($schedule->day == 'X')
+            $schedule->day = 'Miercoles';
+        if($schedule->day == 'J')
+            $schedule->day = 'Jueves';
+        if($schedule->day == 'V')
+            $schedule->day = 'Viernes';
+    }
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<form action="tools.php?page=scheduleteacher" method="post">
+			<?php
+			// output security fields for the registered setting "wporg_options"
+			settings_fields( 'wporg_options' );
+			// output setting sections and their fields
+			// (sections are registered for "wporg", each field is registered to a specific section)
+			do_settings_sections( 'scheduleteacher' );
+            ?>
+            <p>Crear nuevo horario - profesor</p>
+            <div style="display: grid;">
+                <div style="display: flex; flex-direction: column;">
+                    <label for="">Profesor</label>
+                    <select name="teacher_id" id="" placeholder="Selecciona al profesor">
+                        <option value="">Selecciona al profesor</option>
+                        <?php foreach($teachers as $teacher) { ?>
+                            <option value="<?php echo $teacher->id ?>"><?php echo $teacher->name ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+            </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label for="">Horario</label>
+                    <select name="schedule_id" id="" placeholder="Selecciona el nuevo horario">
+                        <option value="">Selecciona el horario</option>
+                        <?php foreach($schedules as $schedule) { ?>
+                            <option value="<?php echo $schedule->id ?>"><?php echo $schedule->schedule ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label for="">Día</label>
+                    <select name="day" id="" placeholder="Selecciona el día">
+                        <option value="">Selecciona el día</option>
+                        <option value="L">Lunes</option>
+                        <option value="M">Martes</option>
+                        <option value="X">Miercoles</option>
+                        <option value="J">Jueves</option>
+                        <option value="V">Viernes</option>
+                        
+                    </select>
+                </div>
+            <?php
+			// output save settings button
+			submit_button( __( 'Guardar Horario', 'textdomain' ) );
+			?>
+		</form>
+        <table class="wp-list-table widefat fixed striped table-view-list">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Día</th>
+                    <th>Horario</th>
+                    <th>Profesor</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($schedulesteachers as $index => $schedule) { ?>
+                    <tr>
+                        <td><?php echo ($index + 1) ?></td>
+                        <td><?php echo $schedule->day ?></td>
+                        <td><?php echo $schedule->schedule ?></td>
+                        <td><?php echo $schedule->name ?></td>
+                        <td>
+                            <form action="tools.php?page=scheduleteacher" method="post">
+                                <input type="hidden" name="scheduleteacher_id" value="<?php echo $schedule->id ?>">
+                                <button type="submit" class="btn">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+	</div>
+	<?php
+}
+function schedules_options_page_html() {
+	// check user capabilities
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+    global $wpdb;
+    
+    if($_POST && $_POST['schedule_action'] == 'delete') {
+        $sql = "DELETE FROM " . $wpdb->prefix . "lavs_schedules WHERE id = %d;";
+        $prepared_sql = $wpdb->prepare($sql, $_POST['schedule_id']);
+        $result = $wpdb->query($prepared_sql);
+    }
+
+    if($_POST && $_POST['schedule'] && $_POST['submit'] == 'Agregar Horario') {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedules", 
+            array( 
+                'schedule' => $_POST['schedule'], 
+            ) 
+        );
+    }
+
+    $sql = "SELECT * FROM " . $wpdb->prefix . "lavs_schedules;";
+    $prepared_sql = $wpdb->prepare($sql);
+    $schedules = $wpdb->get_results($prepared_sql);
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<form action="tools.php?page=schedules" method="post">
+			<?php
+			// output security fields for the registered setting "wporg_options"
+			settings_fields( 'wporg_options' );
+			// output setting sections and their fields
+			// (sections are registered for "wporg", each field is registered to a specific section)
+			do_settings_sections( 'schedules' );
+            ?>
+            <input type="text" placeholder="Nuevo horario" name="schedule">
+            <?php
+			// output save settings button
+			submit_button( __( 'Agregar Horario', 'textdomain' ) );
+			?>
+		</form>
+        <table class="wp-list-table widefat fixed striped table-view-list">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Horario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($schedules as $schedule) { ?>
+                    <tr>
+                        <td><?php echo $schedule->id ?></td>
+                        <td><?php echo $schedule->schedule ?></td>
+                        <td>
+                            <form action="tools.php?page=schedules" method="POST">
+                                <input type="hidden" name="page" value="schedules">
+                                <input type="hidden" name="schedule_action" value="delete">
+                                <input type="hidden" name="schedule_id" value="<?php echo $schedule->id ?>">
+                                <button type="submit">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+	</div>
+	<?php
+}
+function teachers_options_page_html() {
+	// check user capabilities
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+    global $wpdb;
+
+    if($_POST && $_POST['teacher_action'] == 'delete') {
+        $sql = "DELETE FROM " . $wpdb->prefix . "lavs_teachers WHERE id = %d;";
+        $prepared_sql = $wpdb->prepare($sql, $_POST['teacher_id']);
+        $result = $wpdb->query($prepared_sql);
+    }
+    
+    if($_POST && $_POST['teacher'] && $_POST['submit'] == 'Agregar Profesor') {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_teachers", 
+            array( 
+                'name' => $_POST['teacher'], 
+            ) 
+        );
+    }
+
+    $sql = "SELECT * FROM " . $wpdb->prefix . "lavs_teachers;";
+    $prepared_sql = $wpdb->prepare($sql);
+    $teachers = $wpdb->get_results($prepared_sql);
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<form action="tools.php?page=teachers" method="post">
+			<?php
+			// output security fields for the registered setting "wporg_options"
+			settings_fields( 'wporg_options' );
+			// output setting sections and their fields
+			// (sections are registered for "wporg", each field is registered to a specific section)
+			do_settings_sections( 'teachers' );
+            ?>
+            <input type="text" placeholder="Nuevo profesor" name="teacher">
+            <?php
+			// output save settings button
+			submit_button( __( 'Agregar Profesor', 'textdomain' ) );
+			?>
+		</form>
+        <table class="wp-list-table widefat fixed striped table-view-list">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($teachers as $teacher) { ?>
+                    <tr>
+                        <td><?php echo $teacher->id ?></td>
+                        <td><?php echo $teacher->name ?></td>
+                        <td>
+                            <form action="tools.php?page=teachers" method="POST">
+                                <input type="hidden" name="page" value="teachers">
+                                <input type="hidden" name="teacher_action" value="delete">
+                                <input type="hidden" name="teacher_id" value="<?php echo $teacher->id ?>">
+                                <button type="submit">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+	</div>
+	<?php
+}
+
+function wporg_options_page()
+{
+	add_submenu_page(
+		'tools.php',
+		'Formar Horarios',
+		'Formar Horarios',
+		'manage_options',
+		'scheduleteacher',
+		'wporg_options_page_html'
+	);
+}
+function schedules_options_page()
+{
+	add_submenu_page(
+		'tools.php',
+		'Horarios',
+		'Horarios',
+		'manage_options',
+		'schedules',
+		'schedules_options_page_html'
+	);
+}
+function teachers_options_page()
+{
+	add_submenu_page(
+		'tools.php',
+		'Profesores',
+		'Profesores',
+		'manage_options',
+		'teachers',
+		'teachers_options_page_html'
+	);
+}
+add_action('admin_menu', 'wporg_options_page');
+add_action('admin_menu', 'schedules_options_page');
+add_action('admin_menu', 'teachers_options_page');
