@@ -75,6 +75,7 @@ add_action('wp_head', 'my_plugin_add_scripts_to_head');
 
 function my_plugin_add_scripts_to_head() {
     echo '<link href="' . plugins_url('css/teachers.css', __FILE__) . '"/>';
+    // echo '<script src="' . plugins_url('js/loginpopup.js', __FILE__) . '"></script>';
     echo '<script src="' . plugins_url('js/teachers.js', __FILE__) . '"></script>';
   }
 
@@ -286,66 +287,81 @@ function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variat
     
     global $wpdb;
     
-    $result = $wpdb->insert( 
-		$wpdb->prefix . "lavs_schedule_item", 
-		[
-            'cart_id' => $cart_id,
-            'product_id' => $product_id,
-            'user_id' => $user_id,
-			'teacher_id' => $teacher_id, 
-			'schedule_id' => $schedule_id, 
-            'day' => 'L',
-			'add_to_cart' => $add_to_cart, 
-        ] 
-	);
-    $result = $wpdb->insert( 
-		$wpdb->prefix . "lavs_schedule_item", 
-		[
-            'cart_id' => $cart_id,
-            'product_id' => $product_id,
-            'user_id' => $user_id,
-			'teacher_id' => $teacher_id, 
-			'schedule_id' => $m_schedule_id, 
-            'day' => 'M',
-			'add_to_cart' => $add_to_cart, 
-        ] 
-	);
-    $result = $wpdb->insert( 
-		$wpdb->prefix . "lavs_schedule_item", 
-		[
-            'cart_id' => $cart_id,
-            'product_id' => $product_id,
-            'user_id' => $user_id,
-			'teacher_id' => $teacher_id, 
-			'schedule_id' => $x_schedule_id, 
-            'day' => 'X',
-			'add_to_cart' => $add_to_cart, 
-        ] 
-	);
-    $result = $wpdb->insert( 
-		$wpdb->prefix . "lavs_schedule_item", 
-		[
-            'cart_id' => $cart_id,
-            'product_id' => $product_id,
-            'user_id' => $user_id,
-			'teacher_id' => $teacher_id, 
-			'schedule_id' => $j_schedule_id, 
-            'day' => 'J',
-			'add_to_cart' => $add_to_cart, 
-        ] 
-	);
-    $result = $wpdb->insert( 
-		$wpdb->prefix . "lavs_schedule_item", 
-		[
-            'cart_id' => $cart_id,
-            'product_id' => $product_id,
-            'user_id' => $user_id,
-			'teacher_id' => $teacher_id, 
-			'schedule_id' => $v_schedule_id, 
-            'day' => 'V',
-			'add_to_cart' => $add_to_cart, 
-        ] 
-	);
+    if(is_numeric($schedule_id)) {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_item", 
+            [
+                'cart_id' => $cart_id,
+                'product_id' => $product_id,
+                'user_id' => $user_id,
+                'teacher_id' => $teacher_id, 
+                'schedule_id' => $schedule_id, 
+                'day' => 'L',
+                'add_to_cart' => $add_to_cart, 
+            ] 
+        );
+    }
+
+    if(is_numeric($m_schedule_id)) {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_item", 
+            [
+                'cart_id' => $cart_id,
+                'product_id' => $product_id,
+                'user_id' => $user_id,
+                'teacher_id' => $teacher_id, 
+                'schedule_id' => $m_schedule_id, 
+                'day' => 'M',
+                'add_to_cart' => $add_to_cart, 
+            ] 
+        );
+    }
+
+
+    if(is_numeric($x_schedule_id)) {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_item", 
+            [
+                'cart_id' => $cart_id,
+                'product_id' => $product_id,
+                'user_id' => $user_id,
+                'teacher_id' => $teacher_id, 
+                'schedule_id' => $x_schedule_id, 
+                'day' => 'X',
+                'add_to_cart' => $add_to_cart, 
+            ] 
+        );
+    }
+
+    if(is_numeric($j_schedule_id)) {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_item", 
+            [
+                'cart_id' => $cart_id,
+                'product_id' => $product_id,
+                'user_id' => $user_id,
+                'teacher_id' => $teacher_id, 
+                'schedule_id' => $j_schedule_id, 
+                'day' => 'J',
+                'add_to_cart' => $add_to_cart, 
+            ] 
+        );
+    }
+
+    if(is_numeric($v_schedule_id)) {
+        $wpdb->insert( 
+            $wpdb->prefix . "lavs_schedule_item", 
+            [
+                'cart_id' => $cart_id,
+                'product_id' => $product_id,
+                'user_id' => $user_id,
+                'teacher_id' => $teacher_id, 
+                'schedule_id' => $v_schedule_id, 
+                'day' => 'V',
+                'add_to_cart' => $add_to_cart, 
+            ] 
+        );
+    }
 }
 
 // add_action('woocommerce_checkout_create_order_line_item', 'lavs_woocommerce_checkout_create_order_line_item', 11, 4);
@@ -359,6 +375,7 @@ add_action('woocommerce_checkout_create_order_line_item', 'my_after_create_order
 
 function my_after_create_order_line_item($item, $cart_item_key, $values, $order)
 {
+    // Crear meta data para el producto woocommerce
     global $wpdb;
 
     $user_id = get_current_user_id();
