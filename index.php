@@ -273,6 +273,48 @@ function validate_session_before_cart_add_action($cart, $product_id, $quantity =
     }
 }
 
+function redirect_after_login( $user_login, $user ) {
+    // your code}
+    $urlFrom = $_SERVER['HTTP_REFERER'];
+
+    $url = urldecode($urlFrom);
+
+    $queryString = parse_url($url, PHP_URL_QUERY);
+
+    parse_str($queryString, $queryParams);
+
+    if (isset($queryParams['redirect'])) {
+        $redirectPath = $queryParams['redirect'];
+        wc_add_notice(__('Sesión iniciada correctamente'));
+
+        wp_redirect(home_url($redirectPath));
+        exit();
+    }
+}
+
+add_action('wp_login', 'redirect_after_login', 10, 2);
+
+add_action('woocommerce_add_to_cart_validation', 'check_for_selected_schedules_before_add_to_cart', 10, 3);
+
+function check_for_selected_schedules_before_add_to_cart($passed, $product_id, $quantity) {
+    global $wpdb;
+    
+    $user_id = get_current_user_id();
+    
+    $sql = "SELECT * FROM " . $wpdb->prefix . "lavs_schedule_item WHERE product_id = %d AND user_id = %d";
+
+    $prepared_sql = $wpdb->prepare($sql, $product_id, $user_id);
+
+    $results = $wpdb->get_results($prepared_sql);
+
+    if(count($results) > 0) {
+        wc_add_notice(__('Ya existe el curso en tu carrito. Eliminalo y vuelve a agregar si deseas cambiar el horario'), 'error');
+        return false;
+    }
+
+    return $passed;
+}
+
 add_action('woocommerce_add_to_cart', 'my_after_add_to_cart_function', 11, 6);
 
 function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variation_id, $variation, $cart_item_data) {
@@ -286,7 +328,7 @@ function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variat
     $add_to_cart = $_POST['add-to-cart'];
     
     global $wpdb;
-    
+
     if(is_numeric($schedule_id)) {
         $wpdb->insert( 
             $wpdb->prefix . "lavs_schedule_item", 
@@ -364,6 +406,75 @@ function my_after_add_to_cart_function($cart_id, $product_id, $quantity, $variat
     }
 }
 
+add_filter('woocommerce_add_cart_item_data', 'agregar_metadatos_al_carrito', 10, 3);
+
+function agregar_metadatos_al_carrito($cart_item_data, $product_id, $variation_id) {
+    // Agregar metadatos personalizados al producto
+    // $cart_item_data['meta_key'] = 'Valor del metadato';
+    global $wpdb;
+
+    $user_id = get_current_user_id();
+
+    $days = ['L' => 'Lunes', 'M' => 'Martes', 'X' => 'Miercoles', 'J' => 'Jueves', 'V' => 'Viernes'];
+
+    $sql = "SELECT
+            lst.id,
+            lst.schedule_id,
+            ls.`schedule`,
+            lst.teacher_id,
+            lt.`name`,
+            lst.`day` 
+        FROM
+            " . $wpdb->prefix . "lavs_schedule_item lst
+            INNER JOIN " . $wpdb->prefix . "lavs_schedules ls ON lst.schedule_id = ls.id
+            INNER JOIN " . $wpdb->prefix . "lavs_teachers lt ON lst.teacher_id = lt.id
+        WHERE lst.user_id = %d 
+            AND lst.product_id = %d
+        ORDER BY ls.`schedule`";
+
+    $prepared_sql = $wpdb->prepare($sql, $user_id, $product_id);
+
+    $results = $wpdb->get_results($prepared_sql);
+
+    $cart_item_data['Profesor'] = $results[0]->name;
+    
+    foreach($results as $result) {
+        $cart_item_data[$days[$result->day]] = $result->schedule .' hrs.';
+    }
+
+    return $cart_item_data;
+}
+
+// add_filter('woocommerce_get_item_data', 'mostrar_metadatos_en_carrito', 10, 2);
+
+// function mostrar_metadatos_en_carrito($item_data, $cart_item) {
+//     // Obtener los metadatos del producto
+//     $meta_value = $cart_item['meta_key'];
+    
+//     // Agregar los metadatos al array de datos del item
+//     $item_data[] = array(
+//         'key'     => 'Nombre del Metadato:',
+//         'value'   => $meta_value,
+//         'display' => '', // Puedes personalizar el formato de visualización aquí si es necesario
+//     );
+    
+//     return $item_data;
+// }
+
+add_action('woocommerce_remove_cart_item', 'remove_selected_schedules', 20, 2);
+
+function remove_selected_schedules($cart_item_key, $cart) {
+    global $wpdb;
+    
+    $user_id = get_current_user_id();
+
+    $sql = "DELETE FROM " . $wpdb->prefix . "lavs_schedule_item WHERE user_id = %d;";
+
+    $prepared_sql = $wpdb->prepare($sql, $user_id);
+
+    $wpdb->query($prepared_sql);
+}
+
 // add_action('woocommerce_checkout_create_order_line_item', 'lavs_woocommerce_checkout_create_order_line_item', 11, 4);
 
 // function lavs_woocommerce_checkout_create_order_line_item($item, $cart_item_key, $values, $order ) {
@@ -400,13 +511,6 @@ function my_after_create_order_line_item($item, $cart_item_key, $values, $order)
 
     $results = $wpdb->get_results($prepared_sql);
 
-    $wpdb->insert( 
-		$wpdb->prefix . "lavs_logs", 
-		[
-            'key' => 'results',
-            'log' => json_encode($results),
-        ] 
-	);
     $item->add_meta_data('Profesor', $results[0]->name);
 
     foreach($results as $result) {
