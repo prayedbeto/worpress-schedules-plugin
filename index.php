@@ -313,7 +313,7 @@ add_action('register_form', 'antes_del_formulario_de_registro');
 
 function redirigir_despues_de_registro($user_id) {
     $usuario = get_userdata($user_id);
-    
+
     wp_set_auth_cookie($user_id);
     // Verificar si hay una URL de origen almacenada en la sesión
     if (isset($_POST['url_redirect'])) {
@@ -327,7 +327,7 @@ function redirigir_despues_de_registro($user_id) {
     }
 }
 
-add_action('user_register', 'redirigir_despues_de_registro', 10, 1);
+add_action('user_register', 'redirigir_despues_de_registro', 11, 1);
 
 add_action('woocommerce_add_to_cart_validation', 'check_for_selected_schedules_before_add_to_cart', 10, 3);
 
