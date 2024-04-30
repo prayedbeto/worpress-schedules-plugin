@@ -260,13 +260,13 @@ function jal_install_data() {
 add_action('woocommerce_add_to_cart', 'validate_session_before_cart_add_action', 10, 3);
 
 function validate_session_before_cart_add_action($cart, $product_id, $quantity = 1) {
-    global $wpdb;
-
     $currentPath = $_SERVER['REQUEST_URI'];
 
     if (!is_user_logged_in()) {
         // User is not logged in, redirect to login page
-        
+        if(!isset($_SESSION['url_redirect'])) {
+            $_SESSION['url_redirect'] = esc_url($currentPath);
+        }
         wp_redirect('\/login?redirect='. $currentPath);
         // wc_add_notice(__('Please log in to add products to your cart.', 'woocommerce'), 'error');
         exit;
@@ -293,6 +293,41 @@ function redirect_after_login( $user_login, $user ) {
 }
 
 add_action('wp_login', 'redirect_after_login', 10, 2);
+
+function antes_del_formulario_de_registro() {
+    // Tu código o acción aquí
+    $urlFrom = $_SERVER['HTTP_REFERER'];
+
+    $url = urldecode($urlFrom);
+
+    $queryString = parse_url($url, PHP_URL_QUERY);
+
+    parse_str($queryString, $queryParams);
+
+    $_SESSION['url_redirect'] = esc_url($queryParams['redirect']);
+
+    echo '<input type="hidden" name="url_redirect" value="' . $_SESSION['url_redirect'] . '">';
+}
+
+add_action('register_form', 'antes_del_formulario_de_registro');
+
+function redirigir_despues_de_registro($user_id) {
+    $usuario = get_userdata($user_id);
+    
+    wp_set_auth_cookie($user_id);
+    // Verificar si hay una URL de origen almacenada en la sesión
+    if (isset($_POST['url_redirect'])) {
+        $url = urldecode($_POST['url_redirect']);
+        // Redirigir al usuario a la URL de origen
+        // wp_safe_redirect($url);
+        wc_add_notice(__('Registro realizado correctamente'));
+
+        wp_redirect(home_url($url));
+        exit;
+    }
+}
+
+add_action('user_register', 'redirigir_despues_de_registro', 10, 1);
 
 add_action('woocommerce_add_to_cart_validation', 'check_for_selected_schedules_before_add_to_cart', 10, 3);
 
